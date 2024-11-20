@@ -1,4 +1,5 @@
 export function createShopifyCSV(filteredData, images, hierarchy) {
+  
   try {
     let csvHeader =
       "Handle,Title,Body (HTML),Vendor,Product Category,Type,Tags,Published,Option1 Name,Option1 Value," +
@@ -29,8 +30,8 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       )}"`;
       let bodyHtml = createBodyHtml(item);
       let vendor = item["Brand Long Name"].replace(/[,]/g, "");
-      let productCategory = "";
-      let type = "";
+      let productCategory = fetchHierarchy(hierarchy, item["Item Number"]);
+      let type = fetchHierarchy(hierarchy, item["Item Number"]);
       let tags = `"${item["Keywords"].split("; ").join(", ")}"`;
       let published = "TRUE";
       let option1Name = "Title";
@@ -90,6 +91,13 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
 
       csvHeader += `${handle},${title},${bodyHtml},${vendor},${productCategory},${type},${tags},${published},${option1Name},${option1Value},${Option1LinkedTo},${option2Name},${option2Value},${Option2LinkedTo},${option3Name},${option3Value},${Option3LinkedTo},${variantSku},${variantGram},${variantInventoryTracker},${variantInventoryQty},${variantInventoryPolicy},${variantFulfillmentService},${variantPrice},${variantCompareAtPrice},${variantRequiresShipping},${variantTaxable},${variantBarcode},${imageSrc},${imagePosition},${imageAltText},${giftCard},${seoTitle},${seoDescription},${gsProductCategory},${gsGender},${gsAgeGroup},${gsMpn},${gsCondition},${gsCustomProduct},${gsCustomLabel0},${gsCustomLabel1},${gsCustomLabel2},${gsCustomLabel3},${gsCustomLabel4},${productRatingCount},${complementaryProducts},${relatedProducts},${relatedProductsSettings},${variantImage},${variantWeightUnit},${variantTaxCode},${costPerItem},${includedUS},${priceUS},${compareAtPriceUS},${includedAddedByManagedMarkets},${priceAddedByManagedMarkets},${compareAtPriceAddedByManagedMarkets},${status}`;
       csvHeader += "\n";
+
+      const imageKeys = Object.keys(images[item['Item Number']]);
+      for (let i = 1; i < imageKeys.length; i++) {
+        csvHeader += `${handle},,,,,,,,,,,,,,,,,,,,,,,,,,,,${images[item['Item Number']][imageKeys[i]]},${i+1},,,,,,,,,,,,,,,,,,,,,,,,,,,,,,`;
+        csvHeader += "\n";
+      }
+
     });
 
     return csvHeader;
@@ -127,7 +135,7 @@ function createBodyHtml(item) {
 
     let bodyHtml = `"<ul>${sellingPoints.map(
       (point) => `<li>${point}</li>`
-    )}</ul><p>${sellingCopyShort}</p>"`;
+    ).join("")}</ul><p>${sellingCopyShort}</p>"`;
 
     return bodyHtml;
   } catch (error) {
@@ -140,7 +148,7 @@ function setPriceWithMarkup(item) {
     let cost = item["Cost Column 1 Price"];
     let weight = item["Item Weight"];
 
-    const priceWithMarkup = weight <= 25 ? cost * 0.35 : cost * 0.45;
+    const priceWithMarkup = weight <= 25 ? cost * 0.35 : cost * 0.40;
     return priceWithMarkup.toFixed(2);
   } catch (error) {
     throw new Error(`Error setting price with markup: ${error.message}`);
@@ -154,5 +162,21 @@ function createTitle(brandName, description) {
     return title;
   } catch (error) {
     throw new Error(`Error creating title: ${error.message}`);
+  }
+}
+
+function fetchHierarchy(hierarchy, itemNumber) {
+  try {
+    let data = "";
+    for (let value of Object.values(hierarchy)) {
+      if (value['Item Number'] === itemNumber) {
+        data = value['Hierarchy Level 3'];
+        break;
+      }
+    }
+    return data;
+
+  } catch (error) {
+    throw new Error(`Error fetching hierarchy: ${error.message}`);
   }
 }

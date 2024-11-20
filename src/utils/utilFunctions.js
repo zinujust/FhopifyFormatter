@@ -12,13 +12,13 @@ export function readAndExtractSourceData(
   icapsBuffer,
   ecdbBuffer,
   imagesBuffer,
-  heirarchyBuffer
+  hierarchyBuffer
 ) {
   try {
     setIcaps(readFromExcel(icapsBuffer));
     setEcdb(readFromExcel(ecdbBuffer));
     setImages(readImagesFromExcel(imagesBuffer));
-    setHierarchy(readFromExcel(heirarchyBuffer));
+    setHierarchy(readFromExcel(hierarchyBuffer));
     return getFileStorage();
   } catch (error) {
     throw new Error(
@@ -32,8 +32,7 @@ function readFromExcel(file) {
     const workbook = xlsx.read(file, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const jsonData = xlsx.utils.sheet_to_json(worksheet);
-    return jsonData;
+    return xlsx.utils.sheet_to_json(worksheet);
   } catch (error) {
     throw new Error(`Error reading from Excel: ${error.message}`);
   }
@@ -66,35 +65,24 @@ function readImagesFromExcel(file) {
   }
 }
 
-function buildSkuMap(obj1, obj2) {
+function buildSkuMap(jsonMain, jsonAlt) {
   try {
     const skuMap = {};
 
-    let idCounter = 1;
+    jsonMain.forEach((item) => {
+      const image = item["ITEM_IMG_URL_1500Variant"]?.endsWith(".JPG")
+        ? item["ITEM_IMG_URL_1500Variant"]
+        : item["ITEM_IMG_URL_750Variant"];
 
-    obj1.forEach((item) => {
-      let LARGE_IMAGE = "ITEM_IMG_URL_1500Variant";
-      let MED_IMAGE = "ITEM_IMG_URL_750Variant";
-      let image =
-        item[LARGE_IMAGE] && item[LARGE_IMAGE].endsWith(".JPG")
-          ? item[LARGE_IMAGE]
-          : item[MED_IMAGE];
-
-      skuMap[item["ITEMNUMBER"]] = {
-        1: image,
-      };
+      skuMap[item["ITEMNUMBER"]] = { 1: image };
     });
 
-    obj2.forEach((item) => {
-      let LARGE_IMAGE = "ALT_IMG_URL_1500Variant";
-      let MED_IMAGE = "ALT_IMG_URL_750Variant";
-      let image =
-        item[LARGE_IMAGE] && item[LARGE_IMAGE].endsWith(".JPG")
-          ? item[LARGE_IMAGE]
-          : item[MED_IMAGE];
+    jsonAlt.forEach((item) => {
+      const image = item["ALT_IMG_URL_1500Variant"]?.endsWith(".JPG")
+        ? item["ALT_IMG_URL_1500Variant"]
+        : item["ALT_IMG_URL_750Variant"];
 
-      let nextID = Object.keys(skuMap[item["ITEMNUMBER"]]).length + 1;
-
+      const nextID = Object.keys(skuMap[item["ITEMNUMBER"]]).length + 1;
       skuMap[item["ITEMNUMBER"]][nextID] = image;
     });
 
@@ -115,15 +103,28 @@ export function compareAndFilterIcapsWithSyndicatedItems(json1, json2) {
       fetchSKU.has(item["Item Number"])
     );
 
-    const result = filteredData.reduce((acc, item) => {
+    return filteredData.reduce((acc, item) => {
       acc[item["Item Number"]] = item;
-      return acc; // Added return statement here
+      return acc;
     }, {});
-
-    return result;
   } catch (error) {
     throw new Error(
       `Error comparing and filtering ICAPS with syndicated items: ${error.message}`
+    );
+  }
+}
+
+function compareAndFilterIcapsWithHierarchy(json1, json2) {
+  try {
+    if (!json1 || !json2) {
+      return [];
+    }
+
+    const fetchHierarchy = new Set(json2.map((item) => item["Item Number"]));
+    return json1.filter((item) => fetchHierarchy.has(item["Item Number"]));
+  } catch (error) {
+    throw new Error(
+      `Error comparing and filtering ICAPS with hierarchy: ${error.message}`
     );
   }
 }
