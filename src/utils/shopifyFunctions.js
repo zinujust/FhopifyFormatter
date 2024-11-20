@@ -30,7 +30,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       )}"`;
       let bodyHtml = createBodyHtml(item);
       let vendor = item["Brand Long Name"].replace(/[,]/g, "");
-      let productCategory = fetchHierarchy(hierarchy, item["Item Number"]);
+      let productCategory = "";
       let type = fetchHierarchy(hierarchy, item["Item Number"]);
       let tags = `"${item["Keywords"].split("; ").join(", ")}"`;
       let published = "TRUE";
