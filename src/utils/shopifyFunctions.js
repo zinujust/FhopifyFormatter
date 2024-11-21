@@ -109,7 +109,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
 function createHandle(manufacturerName, description, itemNumber) {
   try {
     let handle = manufacturerName + "-" + description + "-" + itemNumber;
-    handle = handle.replace(/[-®™©,\.\/_\sXx()":;']/g, "-").toLowerCase();
+    handle = handle.replace(/[-®™©,+\.\/_\sXx()":;']/g, "-").toLowerCase();
     handle = handle.replace(/-+/g, "-");
     handle = handle.replace(/^-|-$/g, "");
     return handle;
