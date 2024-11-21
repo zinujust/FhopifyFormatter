@@ -15,7 +15,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       "Related products settings (product.metafields.shopify--discovery--product_recommendation.related_products_display)," +
       "Variant Image,Variant Weight Unit,Variant Tax Code,Cost per item,Included / United States,Price / United States," +
       "Compare At Price / United States,Included / Added by Managed Markets,Price / Added by Managed Markets," +
-      "Compare At Price / Added by Managed Markets,Status\n";
+      "Compare At Price / Added by Managed Markets,Status\r\n";
 
     Object.keys(filteredData).forEach((key) => {
       const item = filteredData[key];
@@ -32,7 +32,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       let vendor = item["Brand Long Name"].replace(/[,]/g, "");
       let productCategory = "";
       let type = fetchHierarchy(hierarchy, item["Item Number"]);
-      let tags = `"${item["Keywords"].split("; ").join(", ")}"`;
+      let tags = `"${item["Keywords"].replace(/["]/g, '""').split("; ").join(", ")}"`;
       let published = "TRUE";
       let option1Name = "Title";
       let option1Value = "Default Title";
@@ -90,12 +90,12 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       let status = "active";
 
       csvHeader += `${handle},${title},${bodyHtml},${vendor},${productCategory},${type},${tags},${published},${option1Name},${option1Value},${Option1LinkedTo},${option2Name},${option2Value},${Option2LinkedTo},${option3Name},${option3Value},${Option3LinkedTo},${variantSku},${variantGram},${variantInventoryTracker},${variantInventoryQty},${variantInventoryPolicy},${variantFulfillmentService},${variantPrice},${variantCompareAtPrice},${variantRequiresShipping},${variantTaxable},${variantBarcode},${imageSrc},${imagePosition},${imageAltText},${giftCard},${seoTitle},${seoDescription},${gsProductCategory},${gsGender},${gsAgeGroup},${gsMpn},${gsCondition},${gsCustomProduct},${gsCustomLabel0},${gsCustomLabel1},${gsCustomLabel2},${gsCustomLabel3},${gsCustomLabel4},${productRatingCount},${complementaryProducts},${relatedProducts},${relatedProductsSettings},${variantImage},${variantWeightUnit},${variantTaxCode},${costPerItem},${includedUS},${priceUS},${compareAtPriceUS},${includedAddedByManagedMarkets},${priceAddedByManagedMarkets},${compareAtPriceAddedByManagedMarkets},${status}`;
-      csvHeader += "\n";
+      csvHeader += "\r\n";
 
       const imageKeys = Object.keys(images[item['Item Number']]);
       for (let i = 1; i < imageKeys.length; i++) {
         csvHeader += `${handle},,,,,,,,,,,,,,,,,,,,,,,,,,,,${images[item['Item Number']][imageKeys[i]]},${i+1},,,,,,,,,,,,,,,,,,,,,,,,,,,,,,`;
-        csvHeader += "\n";
+        csvHeader += "\r\n";
       }
 
     });
