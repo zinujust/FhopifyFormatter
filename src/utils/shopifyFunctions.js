@@ -145,10 +145,10 @@ function createBodyHtml(item) {
 
 function setPriceWithMarkup(item) {
   try {
-    let cost = item["Cost Column 1 Price"];
-    let weight = item["Item Weight"];
+    let cost = parseFloat(item["Cost Column 1 Price"]);
+    let weight = parseFloat(item["Item Weight"]);
 
-    const priceWithMarkup = weight <= 25 ? cost * 0.35 : cost * 0.40;
+    const priceWithMarkup = weight <= 25 ? (cost + (cost * 0.35)) : (cost + (cost * 0.40));
     return priceWithMarkup.toFixed(2);
   } catch (error) {
     throw new Error(`Error setting price with markup: ${error.message}`);
