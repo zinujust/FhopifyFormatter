@@ -31,8 +31,8 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       let bodyHtml = createBodyHtml(item);
       let vendor = item["Brand Long Name"].replace(/[,]/g, "");
       let productCategory = "";
-      let type = fetchHierarchy(hierarchy, item["Item Number"]);
-      let tags = `"${item["Keywords"].replace(/["]/g, '""').split("; ").join(", ")}"`;
+      let type = `"${fetchHierarchy(hierarchy, item["Item Number"])}"`;
+      let tags = `"${fetchTags(item["Keywords"])}"`;
       let published = "TRUE";
       let option1Name = "Title";
       let option1Value = "Default Title";
@@ -55,7 +55,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       let variantTaxable = "TRUE";
       let variantBarcode = item["UPC Item GTIN"];
       let imageSrc = images[item["Item Number"]]["1"];
-      let imagePosition = "1";
+      let imagePosition = 1;
       let imageAltText = "";
       let giftCard = "FALSE";
       let seoTitle = "";
@@ -148,7 +148,7 @@ function setPriceWithMarkup(item) {
     let cost = parseFloat(item["Cost Column 1 Price"]);
     let weight = parseFloat(item["Item Weight"]);
 
-    const priceWithMarkup = weight <= 25 ? (cost + (cost * 0.35)) : (cost + (cost * 0.40));
+    const priceWithMarkup = weight <= 25 ? (cost + (cost * 0.30)) : (cost + (cost * 0.35));
     return priceWithMarkup.toFixed(2);
   } catch (error) {
     throw new Error(`Error setting price with markup: ${error.message}`);
@@ -171,6 +171,7 @@ function fetchHierarchy(hierarchy, itemNumber) {
     for (let value of Object.values(hierarchy)) {
       if (value['Item Number'] === itemNumber) {
         data = value['Hierarchy Level 3'];
+        data = data.replace(/["]/g, '""');
         break;
       }
     }
@@ -178,5 +179,19 @@ function fetchHierarchy(hierarchy, itemNumber) {
 
   } catch (error) {
     throw new Error(`Error fetching hierarchy: ${error.message}`);
+  }
+}
+
+function fetchTags(tags) {
+  //`"${item["Keywords"].replace(/["]/g, '""').replace(/[-]/g, '"-"').replace(/[\/]/g, '" "').split("; ").join(", ")}"`;
+
+  try {
+    let data = tags
+      .replace(/["]/g, '""')
+      .split("; ")
+      .join(", ");
+    return data;  
+  } catch (error) {
+    throw new Error(`Error fetching tags: ${error.message}`);
   }
 }
