@@ -12,11 +12,12 @@ router.post("/upload-files", uploadFields, (req, res) => {
     !req.files["icaps"] ||
     !req.files["ecdb"] ||
     !req.files["images"] ||
-    !req.files["hierarchy"]
+    !req.files["hierarchy"] ||
+    !req.files["map"]
   ) {
     return res
       .status(400)
-      .send("All files (icaps, ecdb, images, hierarchy) are required.");
+      .send("All files (icaps, ecdb, images, hierarchy, map) are required.");
   }
 
   try {
@@ -24,19 +25,22 @@ router.post("/upload-files", uploadFields, (req, res) => {
     const ecdbBuffer = req.files["ecdb"][0].buffer;
     const imagesBuffer = req.files["images"][0].buffer;
     const hierarchyBuffer = req.files["hierarchy"][0].buffer;
+    const mapBuffer = req.files["map"][0].buffer;
 
     let fileStorage = readAndExtractSourceData(
       icapsBuffer,
       ecdbBuffer,
       imagesBuffer,
-      hierarchyBuffer
+      hierarchyBuffer,
+      mapBuffer
     );
 
     if (
       !fileStorage.icaps ||
       !fileStorage.ecdb ||
       !fileStorage.images ||
-      !fileStorage.hierarchy
+      !fileStorage.hierarchy ||
+      !fileStorage.map
     ) {
       return res.status(400).send({ message: `An error occurred` });
     }
@@ -45,7 +49,8 @@ router.post("/upload-files", uploadFields, (req, res) => {
       fileStorage.icaps,
       fileStorage.ecdb,
       fileStorage.images,
-      fileStorage.hierarchy
+      fileStorage.hierarchy,
+      fileStorage.map
     );
     const bom = "\uFEFF";
     data = bom + data;
