@@ -3,7 +3,16 @@ let fileStorage = {
   ecdb: null,
   images: null,
   hierarchy: null,
+  map: null,
 };
+
+export const setMap = (data) => {
+  fileStorage.map = data;
+}
+
+export const getMap = () => {
+  return fileStorage.map;
+}
 
 export const setIcaps = (data) => {
   fileStorage.icaps = data;

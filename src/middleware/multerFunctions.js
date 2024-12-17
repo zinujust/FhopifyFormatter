@@ -10,4 +10,5 @@ export const uploadFields = upload.fields([
   { name: "ecdb", maxCount: 1 },
   { name: "images", maxCount: 1 },
   { name: "hierarchy", maxCount: 1 },
+  { name: "map", maxCount: 1 }
 ]);

@@ -1,4 +1,4 @@
-export function createShopifyCSV(filteredData, images, hierarchy) {
+export function createShopifyCSV(filteredData, images, hierarchy, map) {
   
   try {
     let csvHeader =
@@ -20,7 +20,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
     Object.keys(filteredData).forEach((key) => {
       const item = filteredData[key];
       let handle = createHandle(
-        item["Manufacturer Long Name"],
+        item["Brand Long Name"],
         item["Description 125 Character"],
         item["Item Number"]
       );
@@ -44,12 +44,13 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       let option3Value = "";
       let Option3LinkedTo = "";
       let variantSku = item["Item Number"];
-      let variantGram = item["Item Weight"];
+      let variantGramCalc = item["Item Weight"] * 453.592;
+      let variantGram = variantGramCalc.toFixed(2);
       let variantInventoryTracker = "shopify";
       let variantInventoryQty = "0";
       let variantInventoryPolicy = "deny";
       let variantFulfillmentService = "manual";
-      let variantPrice = setPriceWithMarkup(item);
+      let variantPrice = setPriceWithMarkupOrMap(item, map);
       let variantCompareAtPrice = item["List Price"];
       let variantRequiresShipping = "TRUE";
       let variantTaxable = "TRUE";
@@ -87,7 +88,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
       let includedAddedByManagedMarkets = "TRUE";
       let priceAddedByManagedMarkets = "";
       let compareAtPriceAddedByManagedMarkets = "";
-      let status = "active";
+      let status = "draft";
 
       csvHeader += `${handle},${title},${bodyHtml},${vendor},${productCategory},${type},${tags},${published},${option1Name},${option1Value},${Option1LinkedTo},${option2Name},${option2Value},${Option2LinkedTo},${option3Name},${option3Value},${Option3LinkedTo},${variantSku},${variantGram},${variantInventoryTracker},${variantInventoryQty},${variantInventoryPolicy},${variantFulfillmentService},${variantPrice},${variantCompareAtPrice},${variantRequiresShipping},${variantTaxable},${variantBarcode},${imageSrc},${imagePosition},${imageAltText},${giftCard},${seoTitle},${seoDescription},${gsProductCategory},${gsGender},${gsAgeGroup},${gsMpn},${gsCondition},${gsCustomProduct},${gsCustomLabel0},${gsCustomLabel1},${gsCustomLabel2},${gsCustomLabel3},${gsCustomLabel4},${productRatingCount},${complementaryProducts},${relatedProducts},${relatedProductsSettings},${variantImage},${variantWeightUnit},${variantTaxCode},${costPerItem},${includedUS},${priceUS},${compareAtPriceUS},${includedAddedByManagedMarkets},${priceAddedByManagedMarkets},${compareAtPriceAddedByManagedMarkets},${status}`;
       csvHeader += "\r\n";
@@ -109,7 +110,7 @@ export function createShopifyCSV(filteredData, images, hierarchy) {
 function createHandle(manufacturerName, description, itemNumber) {
   try {
     let handle = manufacturerName + "-" + description + "-" + itemNumber;
-    handle = handle.replace(/[-®™©,+\.\/_\sXx()":;']/g, "-").toLowerCase();
+    handle = handle.replace(/[-®™©,+\.\/_\s()":;']/g, "-").toLowerCase();
     handle = handle.replace(/-+/g, "-");
     handle = handle.replace(/^-|-$/g, "");
     return handle;
@@ -143,13 +144,26 @@ function createBodyHtml(item) {
   }
 }
 
-function setPriceWithMarkup(item) {
+function setPriceWithMarkupOrMap(item, map) {
   try {
     let cost = parseFloat(item["Cost Column 1 Price"]);
     let weight = parseFloat(item["Item Weight"]);
 
     const priceWithMarkup = weight <= 25 ? (cost + (cost * 0.30)) : (cost + (cost * 0.35));
-    return priceWithMarkup.toFixed(2);
+    let mapFound = null;
+    
+    for (let [key, value] of Object.entries(map)) {
+      if (Object.values(value).includes(item["Item Number"])) {
+        console.log("MAP FOUND: ", value);
+        
+        mapFound = value;
+        break;
+      }
+    }
+    
+
+    return priceWithMarkup < 0.10 ? parseFloat(item["List Price"]).toFixed(2) :
+    priceWithMarkup > (mapFound ? mapFound[" JAN 2025 MAP "] : 0) ? priceWithMarkup.toFixed(2) : parseFloat(mapFound[" JAN 2025 MAP "]).toFixed(2);
   } catch (error) {
     throw new Error(`Error setting price with markup: ${error.message}`);
   }

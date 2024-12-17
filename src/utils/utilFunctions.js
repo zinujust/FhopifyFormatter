@@ -4,7 +4,8 @@ import {
   setEcdb,
   setHierarchy,
   setIcaps,
-  setImages
+  setImages,
+  setMap
 } from "../model/fileStore.js";
 import { createShopifyCSV } from "./shopifyFunctions.js";
 
@@ -12,13 +13,15 @@ export function readAndExtractSourceData(
   icapsBuffer,
   ecdbBuffer,
   imagesBuffer,
-  hierarchyBuffer
+  hierarchyBuffer,
+  map
 ) {
   try {
     setIcaps(readFromExcel(icapsBuffer));
     setEcdb(readFromExcel(ecdbBuffer));
     setImages(readImagesFromExcel(imagesBuffer));
     setHierarchy(readFromExcel(hierarchyBuffer));
+    setMap(readFromExcel(map));
     return getFileStorage();
   } catch (error) {
     throw new Error(
@@ -92,6 +95,7 @@ function buildSkuMap(jsonMain, jsonAlt) {
   }
 }
 
+//compare ecdb and icaps file to retrieve rich content
 export function compareAndFilterIcapsWithSyndicatedItems(json1, json2) {
   try {
     if (!json1 || !json2) {
@@ -129,10 +133,10 @@ function compareAndFilterIcapsWithHierarchy(json1, json2) {
   }
 }
 
-export function mergedData(icaps, ecdb, images, hierarchy) {
+export function mergedData(icaps, ecdb, images, hierarchy, map) {
   try {
     const filteredData = compareAndFilterIcapsWithSyndicatedItems(icaps, ecdb);
-    return createShopifyCSV(filteredData, images, hierarchy);
+    return createShopifyCSV(filteredData, images, hierarchy, map);
   } catch (error) {
     throw new Error(`Error merging data: ${error.message}`);
   }
